@@ -3,6 +3,7 @@ package com.example.tccomelhor
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,36 +15,108 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.tccomelhor.R.drawable
+import kotlinx.coroutines.launch
 
+@Composable
+fun CampoRegistro(
+    valor: String,
+    aoMudar: (String) -> Unit,
+    dica: String,
+    icone: Int,
+    iconeX: Int,
+    iconeTam: Int,
+    ocultar: Boolean = false,
+    teclado: KeyboardType = KeyboardType.Text
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .offset(y = (-50).dp)
+            .padding(horizontal = 30.dp)
+            .height(50.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFFF8FBFE))
+            .border(2.dp, Color(0xFFD9E8F7), RoundedCornerShape(16.dp))
+    ) {
+        Image(
+            painter = painterResource(id = icone),
+            contentDescription = dica,
+            modifier = Modifier
+                .offset(x = iconeX.dp)
+                .requiredSize(iconeTam.dp),
+            contentScale = ContentScale.Fit
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 58.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            if (valor.isEmpty()) {
+                Text(dica, color = Color(0xFF9ABBE1), fontWeight = FontWeight.Medium)
+            }
+            BasicTextField(
+                value = valor,
+                onValueChange = aoMudar,
+                singleLine = true,
+                textStyle = TextStyle(color = Color(0xFF2B3A55), fontSize = 16.sp),
+                visualTransformation = if (ocultar) PasswordVisualTransformation()
+                else VisualTransformation.None,
+                keyboardOptions = KeyboardOptions(keyboardType = teclado),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
 
 @Composable
 fun Registro(navController: NavController) {
+    var nome by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var confirmar by remember { mutableStateOf("") }
+    var erro by remember { mutableStateOf<String?>(null) }
+    var carregando by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF4F7FD))
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = drawable.logo_app),
+            painter = painterResource(id = R.drawable.logo_app),
             contentDescription = "Logo do aplicativo",
-            modifier = Modifier
-                .size(300.dp),
+            modifier = Modifier.size(300.dp),
             contentScale = ContentScale.Fit
         )
         Text(
@@ -67,188 +140,65 @@ fun Registro(navController: NavController) {
             fontSize = 16.sp,
             fontWeight = FontWeight.Medium
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .padding(horizontal = 30.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF4F7FD))
-                .border(2.dp, Color(0xFFD9E8F7),RoundedCornerShape(16.dp))
-        ){
-            Image(
-                painter = painterResource(id = drawable.usuario),
-                contentDescription = "Usúario",
-                modifier = Modifier
-                    .offset(x = (-68).dp)
-                    .requiredSize(190.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = "Nome Completo",
-                color = Color(0xFF9ABBE1),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(top = 15.dp)
-                    .padding(horizontal = 58.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(16.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .padding(horizontal = 30.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF8FBFE))
-                .border(2.dp, Color(0xFFD9E8F7),RoundedCornerShape(16.dp))
-        ){
-        Image(
-            painter = painterResource(id = drawable.email),
-            contentDescription = "Email",
-            modifier = Modifier
-                .offset(x = (-38).dp)
-                .requiredSize(130.dp),
-            contentScale = ContentScale.Fit
-        )
-        Text(
-            text = "Email",
-            color = Color(0xFF9ABBE1),
-            fontWeight = FontWeight.Medium,
-            modifier = Modifier
-                .padding(top = 15.dp)
-                .padding(horizontal = 58.dp)
-        )
-        }
+        CampoRegistro(nome, { nome = it }, "Nome Completo", R.drawable.usuario, -68, 190)
         Spacer(modifier = Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .padding(horizontal = 30.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF8FBFE))
-                .border(2.dp, Color(0xFFD9E8F7),RoundedCornerShape(16.dp))
-        ){
-            Image(
-                painter = painterResource(id = drawable.senha),
-                contentDescription = "senha",
-                modifier = Modifier
-                    .offset(x = (-55).dp)
-                    .requiredSize(170.dp),
-                contentScale = ContentScale.Fit
-            )
-            Image(
-                painter = painterResource(id = drawable.senha_olho),
-                contentDescription = "Olho senha",
-                modifier = Modifier
-                    .offset(y = 0.dp)
-                    .padding(horizontal = 240.dp)
-                    .requiredSize(140.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = "Senha",
-                color = Color(0xFF9ABBE1),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(horizontal = 58.dp)
-                    .offset(y = 15.dp)
-            )
-        }
+        CampoRegistro(email, { email = it }, "Email", R.drawable.email, -38, 130,
+            teclado = KeyboardType.Email)
         Spacer(modifier = Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .padding(horizontal = 30.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF8FBFE))
-                .border(2.dp, Color(0xFFD9E8F7),RoundedCornerShape(16.dp))
-        ){
-            Image(
-                painter = painterResource(id = drawable.senha),
-                contentDescription = "senha",
-                modifier = Modifier
-                    .offset(x = (-55).dp)
-                    .requiredSize(170.dp),
-                contentScale = ContentScale.Fit
-            )
-            Image(
-                painter = painterResource(id = drawable.senha_olho),
-                contentDescription = "Olho senha",
-                modifier = Modifier
-                    .offset(y = 0.dp)
-                    .padding(horizontal = 240.dp)
-                    .requiredSize(140.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = "Senha",
-                color = Color(0xFF9ABBE1),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(horizontal = 58.dp)
-                    .offset(y = 15.dp)
-            )
-        }
+        CampoRegistro(senha, { senha = it }, "Senha", R.drawable.senha, -55, 170,
+            ocultar = true)
         Spacer(modifier = Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = (-50).dp)
-                .padding(horizontal = 30.dp)
-                .height(50.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF8FBFE))
-                .border(2.dp, Color(0xFFD9E8F7),RoundedCornerShape(16.dp))
-        ){
-            Image(
-                painter = painterResource(id = drawable.calendario),
-                contentDescription = "calendario",
-                modifier = Modifier
-                    .offset(x = (-55).dp)
-                    .requiredSize(170.dp),
-                contentScale = ContentScale.Fit
-            )
-            Text(
-                text = "Data de nascimento ",
-                color = Color(0xFF3F6BC1),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(horizontal = 58.dp)
-                    .offset(y = 2.dp)
-            )
-            Text(
-                text = "DD/MM/AAAA",
-                color = Color(0xFF9ABBE1),
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier
-                    .padding(horizontal = 58.dp)
-                    .offset(y = 24.dp)
-            )
-        }
+        CampoRegistro(confirmar, { confirmar = it }, "Confirmar senha", R.drawable.senha, -55, 170,
+            ocultar = true)
         Spacer(modifier = Modifier.height(10.dp))
+
+        erro?.let {
+            Text(it, color = Color.Red, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         Box(
             modifier = Modifier
                 .width(300.dp)
                 .height(60.dp)
-                .clip(shape = RoundedCornerShape(26.dp))
-                .background(Color(0xFF2684F3)),
+                .clip(RoundedCornerShape(26.dp))
+                .background(if (carregando) Color(0xFF9ABBE1) else Color(0xFF2684F3))
+                .clickable(enabled = !carregando) {
+                    erro = null
+                    when {
+                        nome.isBlank() || email.isBlank() || senha.isBlank() ->
+                            erro = "Preencha todos os campos"
+                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() ->
+                            erro = "Email inválido"
+                        senha.length < 6 ->
+                            erro = "A senha precisa ter pelo menos 6 caracteres"
+                        senha != confirmar ->
+                            erro = "As senhas não conferem"
+                        else -> scope.launch {
+                            carregando = true
+                            try {
+                                val resp = ApiClient.api.registrar(
+                                    RegistroRequest(nome.trim(), email.trim(), senha)
+                                )
+                                if (resp.isSuccessful) {
+                                    navController.navigate("login") // troque pelo nome da sua rota
+                                } else {
+                                    erro = if (resp.code() == 409) "Email já cadastrado"
+                                    else "Erro ao cadastrar"
+                                }
+                            } catch (e: Exception) {
+                                erro = "Sem conexão com o servidor"
+                            }
+                            carregando = false
+                        }
+                    }
+                },
             contentAlignment = Alignment.Center
-        ){
+        ) {
             Text(
-                text = "Começar",
-                color = Color(0xFFFFFFFF),
+                text = if (carregando) "Aguarde..." else "Começar",
+                color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
